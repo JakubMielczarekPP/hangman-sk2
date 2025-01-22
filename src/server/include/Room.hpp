@@ -1,3 +1,6 @@
+#ifndef ROOM_HPP
+#define ROOM_HPP
+
 #include <set>
 
 using namespace std;
@@ -10,3 +13,5 @@ class Room {
 
         void create_room();
 };
+
+#endif
