@@ -1,0 +1,1 @@
+c++ client.cpp -o prog -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network
