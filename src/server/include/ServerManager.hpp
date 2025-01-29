@@ -14,6 +14,7 @@
 
 #include "Room.hpp"
 
+#define MAX_PLAYERS 4
 #define BUFFER_SIZE 1024
 
 using namespace std;
@@ -28,7 +29,7 @@ class ServerManager {
     public:
         int port;
         void start();
-    
+        
     private:
         int server_fd;
         vector<struct pollfd> poll_fds;
@@ -42,6 +43,9 @@ class ServerManager {
         void handle_client_input(int fd, const string& input);
         void accept_new_client();
         void process_client_input(int index);
+        void join_to_room(int fd, int room);
+        void leave_room(int fd);
+        void update_room_players(int room);
 };
 
 #endif

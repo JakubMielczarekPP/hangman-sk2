@@ -14,14 +14,31 @@ struct Room {
     int roomId;
 };
 
+struct PlayerData {
+    int playerId;
+    string nickname;
+    int hitMatrix[8] = {0,0,0,0,0,0,0,0};
+};
+
+struct RoomData {
+    int roomId;
+    int turnId;
+    vector<PlayerData> players;
+};
+
 class Client {
 public:
     bool connected;
-    int scene = 0;
+    string nickname = "";
+    string error = "";
+
+    int roomId = -1;
 
     std::vector<Room> rooms;
+    RoomData roomData;
 
     bool connect_to_server(string& serverIp, int port);
+    bool set_nickname(string& nickname);
     void send_message(string& message);
     void send_to_server(string& message);
     

@@ -3,7 +3,6 @@
 bool Client::connect_to_server(string& serverIp, int port) {
     if (socket.connect(serverIp, port) == sf::Socket::Done) {
         connected = true;
-        scene = 1;
 
         //lista pokoi
         string cmd = "ROOM_LIST";
@@ -31,6 +30,18 @@ void Client::receive_message() {
         if (message.find("ROOM_LIST") == 0) {
             process_room_list(message);
             return;
+        } else if (message.find("JOIN_ROOM") == 0) {
+            roomId = std::stoi(message.substr(message.find(';') + 1));
+            return;
+        } else if (message == "LEAVE_ROOM") {
+            roomId = -1;
+            return;
+        } else if (message == "WRONG_NICKNAME") {
+            error = "Nickname must be unique, less than 18 characters, can't contain \";\" and \":\"!";
+            return;
+        } else if (message.find("SET_NICKNAME") == 0) {
+            nickname = message.substr(message.find(';') + 1);
+            return;
         }
 
     } 
@@ -45,25 +56,20 @@ void Client::process_room_list(string& message) {
 
     std::getline(ss, token, ';');
 
-    // Przetwarzamy kolejne pokoje
     while (std::getline(ss, token, ';')) {
         std::stringstream roomData(token);
         std::string roomIdStr, playersCountStr;
 
-        // Oddzielamy roomId i playersCount
         std::getline(roomData, roomIdStr, ',');
         std::getline(roomData, playersCountStr, ',');
 
-        // Tworzymy obiekt Room i przypisujemy odpowiednie wartości
         Room room;
-        room.roomId = std::stoi(roomIdStr);  // Konwersja id na int
-        room.playersCount = std::stoi(playersCountStr);  // Konwersja playersCount na int
+        room.roomId = std::stoi(roomIdStr);
+        room.playersCount = std::stoi(playersCountStr); 
 
-        // Dodajemy do wektora rooms
         rooms.push_back(room);
     }
 
-    // Debugowanie: wyświetlamy zawartość rooms
     std::cout << "Rooms:" << std::endl;
     for (const Room& room : rooms) {
         std::cout << "Room ID: " << room.roomId << ", Players: " << room.playersCount << std::endl;

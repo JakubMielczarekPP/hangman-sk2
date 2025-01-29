@@ -30,7 +30,8 @@ int main() {
             else if (event.type == sf::Event::MouseWheelScrolled) gui.handle_scroll(event);
         }
 
-        if (client.scene == 0) gui.drawIntroScreen();
+        if (!client.connected || client.nickname.empty()) gui.drawIntroScreen(client);
+        else if(client.roomId > 0) gui.drawGameScreen(client);
         else gui.drawLobbyScreen(client);
 
         window.display();

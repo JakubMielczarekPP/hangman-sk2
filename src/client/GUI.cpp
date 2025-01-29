@@ -11,24 +11,40 @@ GUI::GUI(sf::RenderWindow& window) : window(window) {
     tip.setPosition(20,100);
 }
 
-void GUI::drawIntroScreen() {
-    title.setString("Enter Server IP:");
+void GUI::drawIntroScreen(Client& client) {
+    if (!client.connected) title.setString("Enter Server IP:");
+    else title.setString("Enter you nickname:");
+
+    tip.setString(client.error);
 
     window.draw(title);
     window.draw(tip);
     window.draw(inputText);
 }
 
-void GUI::drawGameScreen() {
-    serverText.setString("siema");
+void GUI::drawGameScreen(Client& client) {
+    title.setString("Room #" + to_string(client.roomId));
+
+    sf::RectangleShape yLine(sf::Vector2f(5, window.getSize().y));
+    yLine.setPosition(window.getSize().x/2, 0);
+
+    sf::RectangleShape xLine(sf::Vector2f(window.getSize().x, 5));
+    xLine.setPosition(0, window.getSize().y/2);
+
+    leaveRoomButton.setSize(sf::Vector2f(150, 30));
+    leaveRoomButton.setPosition(window.getSize().x-150, window.getSize().y-30);
+    leaveRoomButton.setFillColor(sf::Color::Red);
+
+    window.draw(leaveRoomButton);
+    window.draw(title);
+    window.draw(yLine);
+    window.draw(xLine);
 }
 
 void GUI::drawLobbyScreen(Client& client) {
-    // Ustalamy widok przewijania
-    sf::View scrollView(window.getView()); // Używamy domyślnego widoku
-    // scrollView.setCenter(0, 0);  // Center startowe
-    scrollView.setSize(window.getSize().x, window.getSize().y);  // Rozmiar widoku = rozmiar okna
-    window.setView(scrollView);  // Przypisujemy nowy widok
+    sf::View scrollView(window.getView());
+    scrollView.setSize(window.getSize().x, window.getSize().y);
+    window.setView(scrollView); 
 
     title.setString("Lobby");
     title.setPosition(20, 20);
@@ -79,7 +95,9 @@ void GUI::drawLobbyScreen(Client& client) {
 
         window.draw(roomText);
         window.draw(playerCount);
-        window.draw(joinButton);
+        if (client.rooms[i].playersCount < 4) window.draw(joinButton);
+
+        joinButtons.push_back({joinButton, client.rooms[i].roomId});
     }
 }
 
@@ -91,7 +109,10 @@ void GUI::handle_input(sf::Event event, Client& client) {
     if (event.text.unicode == '\r') {
         title.setString("Wron2g ip");
         if (!client.connected) {
-            if (!client.connect_to_server(inputBuffer, 8080)) tip.setString("Wrong ip");
+            if (!client.connect_to_server(inputBuffer, 8080)) client.error = "Unknown IP";
+        } else if (client.nickname.empty()) {
+            string cmd = "SET_NICKNAME;" + inputBuffer; 
+            client.send_to_server(cmd);
         }
 
         inputBuffer.clear();
@@ -106,15 +127,21 @@ void GUI::handle_input(sf::Event event, Client& client) {
 
 void GUI::handle_clicks(sf::Event event, Client& client) {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-    
-    if (createRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-        string cmd = "CREATE_ROOM";
-        client.send_to_server(cmd);
-    } else if (refreshButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-        string cmd = "ROOM_LIST";
-        client.send_to_server(cmd);
+    string cmd = "";
+
+    if (client.roomId < 0 && createRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "CREATE_ROOM";
+    else if (client.roomId < 0 && refreshButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "ROOM_LIST";    
+    else if (client.roomId > -1 && leaveRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "LEAVE_ROOM";    
+    else if (client.roomId < 0) {
+        for (int i = 0; i < joinButtons.size(); i++) {
+            if (joinButtons[i].button.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "JOIN_ROOM;" + to_string(joinButtons[i].id);
+        }
     }
+
+    if (!cmd.empty()) client.send_to_server(cmd);
 }
+
+
 
 void GUI::handle_scroll(sf::Event event) {
     if (event.mouseWheelScroll.delta > 0) {

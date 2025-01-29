@@ -6,20 +6,28 @@
 #include <SFML/Network.hpp>
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include "Client.hpp"
+
+struct JoinButton {
+    sf::RectangleShape button;
+    int id;
+};
 
 class GUI {
 public:
     GUI(sf::RenderWindow& window);
 
     // void handleEvents(const sf::Event& event, Network& network, bool& connected);
-    void drawIntroScreen();
-    void drawGameScreen();
+    void drawIntroScreen(Client& client);
+    void drawGameScreen(Client& client);
     void drawLobbyScreen(Client& client);
     void handle_input(sf::Event event, Client& client);
     void handle_clicks(sf::Event event, Client& client);
     void handle_scroll(sf::Event event);
+
+    vector<JoinButton> joinButtons;
 
 private:
     sf::RenderWindow& window;
@@ -38,6 +46,9 @@ private:
 
     sf::RectangleShape refreshButton;
     sf::Text refreshText;
+
+    sf::RectangleShape leaveRoomButton;
+    sf::Text leaveRoomText;
 
     void updateInputText();
 };

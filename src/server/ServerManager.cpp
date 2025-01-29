@@ -83,7 +83,7 @@ void ServerManager::remove_player(int fd) {
     if (players.find(fd) != players.end()) {
         int room = players[fd].room_id;
         if (room > -1 && rooms.find(room) != rooms.end()) {
-            rooms[room].players.erase(fd);
+            rooms[room].remove_player_by_fd(fd);
             if (rooms[room].players.empty()) {
                 rooms.erase(room);
             }
@@ -101,13 +101,39 @@ void ServerManager::send_to_client(int fd, const string& message) {
     send(fd, message.c_str(), message.size(), 0);
 }
 
+bool invalid_name(const std::string& str) {
+    if (str.length() > 16) {
+        return true;
+    }
+    if (str.find(';') != std::string::npos) {
+        return true;
+    }
+    if (str.find(':') != std::string::npos) {
+        return true;
+    }
+
+    return false;
+}
+
 void ServerManager::handle_client_input(int fd, const string& input) {
     cout << input << endl;
 
     if (input.rfind("SET_NICKNAME", 0) == 0) {
-        string nickname = input.substr(12);
-        cout << nickname << endl;
+        string nickname = input.substr(13);
+
+        bool taken = any_of(players.begin(), players.end(), [&](const auto& pair) {
+            return pair.second.nickname == nickname;
+        });
+
+        if (taken || invalid_name(nickname)) {
+            send_to_client(fd, "WRONG_NICKNAME");
+            return;
+        }
+
+        players[fd].nickname = nickname;
+        send_to_client(fd, "SET_NICKNAME;" + nickname);
     } else if (input == "CREATE_ROOM") {
+        if (players[fd].room_id > -1) return;
         Room room;
         room.id = next_room_id;
         rooms[next_room_id] = room;
@@ -115,15 +141,74 @@ void ServerManager::handle_client_input(int fd, const string& input) {
 
         cout << "Room #" << next_room_id << " created!" << endl;
         
+        join_to_room(fd, next_room_id);
+        send_to_client(fd, "JOIN_ROOM;" + to_string(next_room_id));
+        
         next_room_id++;
     } else if (input == "ROOM_LIST") {
         string roomsList = "ROOM_LIST";
-        
-        for (int i = 0; i < rooms.size(); i++) {
-            Room room = rooms[i];
-            roomsList += ";" + to_string(room.id) + "," + to_string(room.players.size());
+
+        for (const auto& pair : rooms) {
+            const Room& room = pair.second;
+            roomsList += ";" + std::to_string(room.id) + "," + std::to_string(room.players.size());
         }
 
         send_to_client(fd, roomsList);
+    } else if (input.rfind("JOIN_ROOM", 0) == 0) {
+        int roomId = std::stoi(input.substr(input.find(';') + 1));
+
+        join_to_room(fd, roomId);
+    } else if (input == "LEAVE_ROOM") {
+        leave_room(fd);
+
+        send_to_client(fd, "LEAVE_ROOM");
+        handle_client_input(fd, "ROOM_LIST");
+    }
+}
+
+void ServerManager::join_to_room(int fd, int roomId) {
+    Room& room = rooms[roomId];
+
+    if (room.players.size() >= MAX_PLAYERS) {
+        return send_to_client(fd, "ERROR;TOO_MANY_PLAYERS");
+    }
+
+    Player& player = players[fd];
+    if (player.room_id > -1) return;
+
+    player.room_id = roomId;
+    room.players.push_back(fd);
+
+    send_to_client(fd, "JOIN_ROOM;" + to_string(roomId));
+    update_room_players(roomId);
+
+    cout << "Player " << fd << " joined to room " << roomId << endl;
+}
+
+void ServerManager::leave_room(int fd) {
+    Player& player = players[fd];
+    int room = player.room_id;
+    
+    if (room > -1 && rooms.find(room) != rooms.end()) {
+        rooms[room].remove_player_by_fd(fd);
+
+        if (rooms[room].players.empty()) {
+            rooms.erase(room);
+        }
+    }
+
+    player.room_id = -1;
+}
+
+void ServerManager::update_room_players(int roomId) {
+    Room& room = rooms[roomId];
+    if (rooms.count(roomId) == 0) return;
+
+    string roomData = "";
+    for (int i = 0; i < room.players.size(); i++) {
+        if (players.count(room.players[i]) == 0) continue;
+        Player player = players[room.players[i]];
+
+        cout << player.nickname << endl;
     }
 }
