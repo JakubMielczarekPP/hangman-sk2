@@ -81,13 +81,7 @@ void ServerManager::process_client_input(int index) {
 
 void ServerManager::remove_player(int fd) {
     if (players.find(fd) != players.end()) {
-        int room = players[fd].room_id;
-        if (room > -1 && rooms.find(room) != rooms.end()) {
-            rooms[room].remove_player_by_fd(fd);
-            if (rooms[room].players.empty()) {
-                rooms.erase(room);
-            }
-        }
+        leave_room(fd);
         players.erase(fd);
     }
     
@@ -98,7 +92,10 @@ void ServerManager::remove_player(int fd) {
 
 
 void ServerManager::send_to_client(int fd, const string& message) {
-    send(fd, message.c_str(), message.size(), 0);
+    uint32_t length = message.size();
+
+    send(fd, &length, sizeof(length), 0); // Najpierw wysyłamy długość wiadomości
+    send(fd, message.c_str(), length, 0); // Następnie wysyłamy wiadomość
 }
 
 bool invalid_name(const std::string& str) {
@@ -160,13 +157,15 @@ void ServerManager::handle_client_input(int fd, const string& input) {
         join_to_room(fd, roomId);
     } else if (input == "LEAVE_ROOM") {
         leave_room(fd);
-
         send_to_client(fd, "LEAVE_ROOM");
         handle_client_input(fd, "ROOM_LIST");
     }
 }
 
 void ServerManager::join_to_room(int fd, int roomId) {
+    if (rooms.find(roomId) == rooms.end()) return;
+    if (players.find(fd) == players.end()) return;
+    
     Room& room = rooms[roomId];
 
     if (room.players.size() >= MAX_PLAYERS) {
@@ -188,27 +187,34 @@ void ServerManager::join_to_room(int fd, int roomId) {
 void ServerManager::leave_room(int fd) {
     Player& player = players[fd];
     int room = player.room_id;
-    
+
     if (room > -1 && rooms.find(room) != rooms.end()) {
         rooms[room].remove_player_by_fd(fd);
 
-        if (rooms[room].players.empty()) {
+        if (rooms[room].players.size() <= 0) {
             rooms.erase(room);
+        } else {
+            update_room_players(room);
         }
+
+        player.room_id = -1;
     }
 
-    player.room_id = -1;
 }
 
 void ServerManager::update_room_players(int roomId) {
     Room& room = rooms[roomId];
     if (rooms.count(roomId) == 0) return;
 
-    string roomData = "";
+    string playersData = "";
     for (int i = 0; i < room.players.size(); i++) {
         if (players.count(room.players[i]) == 0) continue;
-        Player player = players[room.players[i]];
+        playersData += players[room.players[i]].nickname + ":";
+    }
 
-        cout << player.nickname << endl;
+    string data = playersData;
+
+    for (int i = 0; i < room.players.size(); i++) {
+        send_to_client(room.players[i], "UPDATE_ROOM;" + data);
     }
 }

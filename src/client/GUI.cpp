@@ -35,6 +35,16 @@ void GUI::drawGameScreen(Client& client) {
     leaveRoomButton.setPosition(window.getSize().x-150, window.getSize().y-30);
     leaveRoomButton.setFillColor(sf::Color::Red);
 
+    for (int i = 0; i < 4; i++) {
+        if (client.roomData.players.size() <= i) break;
+
+        sf::Text nickname;
+        nickname.setFont(font);
+        nickname.setString(client.roomData.players[i].nickname);
+        nickname.setPosition(300+(100*i), 500);
+        window.draw(nickname);
+    }
+
     window.draw(leaveRoomButton);
     window.draw(title);
     window.draw(yLine);

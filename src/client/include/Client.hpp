@@ -15,7 +15,6 @@ struct Room {
 };
 
 struct PlayerData {
-    int playerId;
     string nickname;
     int hitMatrix[8] = {0,0,0,0,0,0,0,0};
 };
@@ -48,6 +47,7 @@ private:
     sf::TcpSocket socket;
 
     void process_room_list(string& message);
+    void process_room_data(string& data);
 };
 
 #endif

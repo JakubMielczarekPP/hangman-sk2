@@ -19,32 +19,62 @@ void Client::send_to_server(string& message) {
 }
 
 void Client::receive_message() {
+    uint32_t length;
+    std::size_t received = 0;  // Deklaracja zmiennej received
+
+    // Pierwsze wywołanie receive w celu odebrania długości wiadomości
+    if (socket.receive(&length, sizeof(length), received) != sf::Socket::Done) {
+        return;
+    }
+
     char data[1024];
-    std::size_t received;
-    sf::Socket::Status status = socket.receive(data, sizeof(data), received);
 
-    if (status == sf::Socket::Done) {
-        std::string message(data, received); 
-        if (message.empty()) return;
-        
-        if (message.find("ROOM_LIST") == 0) {
-            process_room_list(message);
-            return;
-        } else if (message.find("JOIN_ROOM") == 0) {
-            roomId = std::stoi(message.substr(message.find(';') + 1));
-            return;
-        } else if (message == "LEAVE_ROOM") {
-            roomId = -1;
-            return;
-        } else if (message == "WRONG_NICKNAME") {
-            error = "Nickname must be unique, less than 18 characters, can't contain \";\" and \":\"!";
-            return;
-        } else if (message.find("SET_NICKNAME") == 0) {
-            nickname = message.substr(message.find(';') + 1);
-            return;
-        }
+    // Jeśli długość wiadomości jest większa niż rozmiar bufora, można obsłużyć to w odpowiedni sposób
+    if (length > sizeof(data)) {
+        // Obsługa zbyt dużych wiadomości
+        return;
+    }
 
-    } 
+    // Drugie wywołanie receive w celu odebrania samej wiadomości
+    if (socket.receive(data, length, received) != sf::Socket::Done) {
+        return;
+    }
+
+    // Przekształcenie odebranych danych w string
+    std::string message(data, received); 
+    if (message.empty()) return;
+    
+    if (message.find("ROOM_LIST") == 0) {
+        process_room_list(message);
+        return;
+    } else if (message.find("JOIN_ROOM") == 0) {
+        roomId = std::stoi(message.substr(message.find(';') + 1));
+        return;
+    } else if (message == "LEAVE_ROOM") {
+        roomId = -1;
+        return;
+    } else if (message == "WRONG_NICKNAME") {
+        error = "Nickname must be unique, less than 18 characters, can't contain \";\" and \":\"!";
+        return;
+    } else if (message.find("SET_NICKNAME") == 0) {
+        nickname = message.substr(message.find(';') + 1);
+        return;
+    } else if (message.find("UPDATE_ROOM") == 0) {
+        string roomData = message.substr(message.find(';') + 1);
+        process_room_data(roomData);
+    }
+}
+
+void Client::process_room_data(string& data) {
+    vector<PlayerData> players;
+    std::stringstream ss(data);
+    std::string username;
+
+    while (std::getline(ss, username, ':')) {
+        players.push_back({username});
+    }
+
+    roomData = {roomId, -1, players};
 }
 
 void Client::process_room_list(string& message) {

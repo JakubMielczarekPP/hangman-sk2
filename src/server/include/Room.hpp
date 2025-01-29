@@ -9,6 +9,7 @@ using namespace std;
 class Room {
     public:
         int id;
+        int turnId = -1;
         vector<int> players;
         bool in_progress = false;
 
