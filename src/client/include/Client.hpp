@@ -17,11 +17,13 @@ struct Room {
 struct PlayerData {
     string nickname;
     char guessed[8] = {'0','0','0','0','0','0','0','0'};
+    int missed = 0;
 };
 
 struct RoomData {
     int roomId;
     int turnId;
+    bool ownsRoom = false;
     vector<PlayerData> players;
 };
 

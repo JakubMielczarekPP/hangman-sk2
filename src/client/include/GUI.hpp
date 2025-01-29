@@ -50,6 +50,9 @@ private:
     sf::RectangleShape leaveRoomButton;
     sf::Text leaveRoomText;
 
+    sf::RectangleShape startRoomButton;
+    sf::Text startRoomText;
+
     void updateInputText();
 };
 

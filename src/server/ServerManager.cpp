@@ -214,12 +214,13 @@ void ServerManager::update_room_players(int roomId) {
         if (players.count(room.players[i]) == 0) continue;
         playersData += players[room.players[i]].nickname + ",";
         for (const auto& guess : players[room.players[i]].guessed) playersData += to_string(guess);
+        playersData += "," + players[room.players[i]].missed;
         playersData += ":";
     }
 
     string data = playersData;
 
     for (int i = 0; i < room.players.size(); i++) {
-        send_to_client(room.players[i], "UPDATE_ROOM;" + data);
+        send_to_client(room.players[i], "UPDATE_ROOM;" + data + ";" + to_string(i));
     }
 }

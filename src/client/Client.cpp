@@ -68,31 +68,47 @@ void Client::receive_message() {
 void Client::process_room_data(string& data) {
     vector<PlayerData> players;
     std::stringstream ss(data);
-    std::string user;
+    std::string line;
+    
+    int k = 0;
+    bool isOwner = false;
+    while (std::getline(ss, line, ';')) {
+        std::stringstream ss3(line);
+        std::string user;
+        cout << line << endl;
+        if (k == 0) {
+            while (std::getline(ss3, user, ':')) {
+                std::stringstream ss2(user);
+                std::string element;
 
-    while (std::getline(ss, user, ':')) {
-        std::stringstream ss2(user);
-        std::string element;
+                int index = 0, missed = 0;
+                string nickname;
+                char guessed[8];
+                while (std::getline(ss2, element, ',')) {
+                    if (index == 0) nickname = element;
+                    else if (index == 1) {
+                        for (int i = 0; i < 8; i++) {
+                            guessed[i] = element[i];
+                        }
+                    } else {
+                        missed = stoi(element);
+                    }
 
-        int index = 0;
-        string nickname;
-        char guessed[8];
-        while (std::getline(ss2, element, ',')) {
-            if (index == 0) nickname = element;
-            else {
-                for (int i = 0; i < 8; i++) {
-                    guessed[i] = element[i];
+                    index++;
                 }
-            }
 
-            index++;
+                players.push_back({nickname, {}, missed});
+                std::copy(std::begin(guessed), std::end(guessed), std::begin(players.back().guessed));
+            }
+        } else {
+            if (line == "0") isOwner = true;
         }
 
-        players.push_back({nickname, {}});
-        std::copy(std::begin(guessed), std::end(guessed), std::begin(players.back().guessed));
+        k++;
+
     }
 
-    roomData = {roomId, -1, players};
+    roomData = {roomId, -1, isOwner, players};
 }
 
 void Client::process_room_list(string& message) {

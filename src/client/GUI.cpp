@@ -35,12 +35,21 @@ void GUI::drawGameScreen(Client& client) {
     leaveRoomButton.setPosition(window.getSize().x-150, window.getSize().y-30);
     leaveRoomButton.setFillColor(sf::Color::Red);
 
+    if (client.roomData.ownsRoom && client.roomData.turnId < 0 && client.roomData.players.size() >= 2) {
+
+        startRoomButton.setSize(sf::Vector2f(150, 30));
+        startRoomButton.setPosition(window.getSize().x-310, window.getSize().y-30);
+        startRoomButton.setFillColor(sf::Color::Green);
+
+        window.draw(startRoomButton);
+    }
+
     for (int i = 0; i < 4; i++) {
         if (client.roomData.players.size() <= i) break;
 
         sf::Text nickname;
         nickname.setFont(font);
-        nickname.setString(client.roomData.players[i].nickname);
+        nickname.setString(client.roomData.players[i].nickname + ((client.nickname == client.roomData.players[i].nickname) ? " (YOU)" : ""));
         sf::FloatRect textBounds = nickname.getLocalBounds();
         nickname.setPosition(i%2 == 0 ? (window.getSize().x/2)-textBounds.width-50 : (window.getSize().x/2)+50, i<2 ? (window.getSize().y/2)-50 : (window.getSize().y/2)+30);
         window.draw(nickname);
