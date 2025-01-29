@@ -20,27 +20,22 @@ void Client::send_to_server(string& message) {
 
 void Client::receive_message() {
     uint32_t length;
-    std::size_t received = 0;  // Deklaracja zmiennej received
+    std::size_t received = 0; 
 
-    // Pierwsze wywołanie receive w celu odebrania długości wiadomości
     if (socket.receive(&length, sizeof(length), received) != sf::Socket::Done) {
         return;
     }
 
     char data[1024];
 
-    // Jeśli długość wiadomości jest większa niż rozmiar bufora, można obsłużyć to w odpowiedni sposób
     if (length > sizeof(data)) {
-        // Obsługa zbyt dużych wiadomości
         return;
     }
 
-    // Drugie wywołanie receive w celu odebrania samej wiadomości
     if (socket.receive(data, length, received) != sf::Socket::Done) {
         return;
     }
 
-    // Przekształcenie odebranych danych w string
     std::string message(data, received); 
     if (message.empty()) return;
     

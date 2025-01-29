@@ -48,6 +48,7 @@ class ServerManager {
         void join_to_room(int fd, int room);
         void leave_room(int fd);
         void update_room_players(int room);
+        void start_game(int fd);
 };
 
 #endif
