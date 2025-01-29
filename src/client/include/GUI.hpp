@@ -5,6 +5,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
 #include <string>
+#include <iostream>
 
 #include "Client.hpp"
 
@@ -15,9 +16,10 @@ public:
     // void handleEvents(const sf::Event& event, Network& network, bool& connected);
     void drawIntroScreen();
     void drawGameScreen();
-    void drawLobbyScreen();
+    void drawLobbyScreen(Client& client);
     void handle_input(sf::Event event, Client& client);
     void handle_clicks(sf::Event event, Client& client);
+    void handle_scroll(sf::Event event);
 
 private:
     sf::RenderWindow& window;
@@ -25,17 +27,17 @@ private:
     sf::Text inputText;
     sf::Text serverText;
 
+    int scrollOffset = 0;
+
     std::string inputBuffer;
     sf::Text title;
     sf::Text tip;
 
-    // Przyciski
     sf::RectangleShape createRoomButton;
     sf::Text createRoomText;
-    sf::RectangleShape listRoomsButton;
-    sf::Text listRoomsText;
-    sf::RectangleShape joinRoomButton;
-    sf::Text joinRoomText;
+
+    sf::RectangleShape refreshButton;
+    sf::Text refreshText;
 
     void updateInputText();
 };

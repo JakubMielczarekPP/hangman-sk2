@@ -110,9 +110,20 @@ void ServerManager::handle_client_input(int fd, const string& input) {
     } else if (input == "CREATE_ROOM") {
         Room room;
         room.id = next_room_id;
+        rooms[next_room_id] = room;
         room.create_room();
+
         cout << "Room #" << next_room_id << " created!" << endl;
         
         next_room_id++;
+    } else if (input == "ROOM_LIST") {
+        string roomsList = "ROOM_LIST";
+        
+        for (int i = 0; i < rooms.size(); i++) {
+            Room room = rooms[i];
+            roomsList += ";" + to_string(room.id) + "," + to_string(room.players.size());
+        }
+
+        send_to_client(fd, roomsList);
     }
 }
