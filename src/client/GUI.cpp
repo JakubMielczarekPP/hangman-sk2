@@ -41,8 +41,23 @@ void GUI::drawGameScreen(Client& client) {
         sf::Text nickname;
         nickname.setFont(font);
         nickname.setString(client.roomData.players[i].nickname);
-        nickname.setPosition(300+(100*i), 500);
+        sf::FloatRect textBounds = nickname.getLocalBounds();
+        nickname.setPosition(i%2 == 0 ? (window.getSize().x/2)-textBounds.width-50 : (window.getSize().x/2)+50, i<2 ? (window.getSize().y/2)-50 : (window.getSize().y/2)+30);
         window.draw(nickname);
+
+        int j = 0;
+        for (const auto& guess : client.roomData.players[i].guessed) {
+            sf::RectangleShape square(sf::Vector2f(50,50));
+            square.setPosition((i%2 == 0 ? (window.getSize().x/4): (window.getSize().x)-(window.getSize().x/4)) + (j*50) - 200, i<2 ? (window.getSize().y/2)-120 : (window.getSize().y)-100);
+            window.draw(square);
+
+            sf::RectangleShape smallSquare(sf::Vector2f(40,40));
+            smallSquare.setPosition((i%2 == 0 ? (window.getSize().x/4): (window.getSize().x)-(window.getSize().x/4)) + (j*50) + 5 - 200, (i<2 ? (window.getSize().y/2)-120 : (window.getSize().y)-100) + 5);
+            smallSquare.setFillColor( guess == '0' ? sf::Color::Red : sf::Color::Green);
+            window.draw(smallSquare);
+
+            j++;
+        }
     }
 
     window.draw(leaveRoomButton);
@@ -117,7 +132,6 @@ void GUI::updateInputText() {
 
 void GUI::handle_input(sf::Event event, Client& client) {
     if (event.text.unicode == '\r') {
-        title.setString("Wron2g ip");
         if (!client.connected) {
             if (!client.connect_to_server(inputBuffer, 8080)) client.error = "Unknown IP";
         } else if (client.nickname.empty()) {

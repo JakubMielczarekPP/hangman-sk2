@@ -108,6 +108,9 @@ bool invalid_name(const std::string& str) {
     if (str.find(':') != std::string::npos) {
         return true;
     }
+    if (str.find(',') != std::string::npos) {
+        return true;
+    }
 
     return false;
 }
@@ -209,7 +212,9 @@ void ServerManager::update_room_players(int roomId) {
     string playersData = "";
     for (int i = 0; i < room.players.size(); i++) {
         if (players.count(room.players[i]) == 0) continue;
-        playersData += players[room.players[i]].nickname + ":";
+        playersData += players[room.players[i]].nickname + ",";
+        for (const auto& guess : players[room.players[i]].guessed) playersData += to_string(guess);
+        playersData += ":";
     }
 
     string data = playersData;

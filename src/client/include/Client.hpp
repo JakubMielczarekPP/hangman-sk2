@@ -16,7 +16,7 @@ struct Room {
 
 struct PlayerData {
     string nickname;
-    int hitMatrix[8] = {0,0,0,0,0,0,0,0};
+    char guessed[8] = {'0','0','0','0','0','0','0','0'};
 };
 
 struct RoomData {

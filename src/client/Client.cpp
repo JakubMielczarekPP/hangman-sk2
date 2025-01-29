@@ -54,7 +54,7 @@ void Client::receive_message() {
         roomId = -1;
         return;
     } else if (message == "WRONG_NICKNAME") {
-        error = "Nickname must be unique, less than 18 characters, can't contain \";\" and \":\"!";
+        error = "Nickname must be unique, less than 18 characters, mustn't contain \";\", \":\" and \",\"!";
         return;
     } else if (message.find("SET_NICKNAME") == 0) {
         nickname = message.substr(message.find(';') + 1);
@@ -68,10 +68,28 @@ void Client::receive_message() {
 void Client::process_room_data(string& data) {
     vector<PlayerData> players;
     std::stringstream ss(data);
-    std::string username;
+    std::string user;
 
-    while (std::getline(ss, username, ':')) {
-        players.push_back({username});
+    while (std::getline(ss, user, ':')) {
+        std::stringstream ss2(user);
+        std::string element;
+
+        int index = 0;
+        string nickname;
+        char guessed[8];
+        while (std::getline(ss2, element, ',')) {
+            if (index == 0) nickname = element;
+            else {
+                for (int i = 0; i < 8; i++) {
+                    guessed[i] = element[i];
+                }
+            }
+
+            index++;
+        }
+
+        players.push_back({nickname, {}});
+        std::copy(std::begin(guessed), std::end(guessed), std::begin(players.back().guessed));
     }
 
     roomData = {roomId, -1, players};

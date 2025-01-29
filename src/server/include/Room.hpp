@@ -11,7 +11,7 @@ class Room {
         int id;
         int turnId = -1;
         vector<int> players;
-        bool in_progress = false;
+        char word[9] = "abstrakt";
 
         void create_room();
         void remove_player_by_fd(int fd);

@@ -23,6 +23,8 @@ struct Player {
     int fd;
     int room_id = -1;
     string nickname;
+    int guessed[8] = {0,0,0,0,0,0,0,0};
+    int missed = 0;
 };
 
 class ServerManager {
