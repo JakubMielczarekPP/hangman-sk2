@@ -25,6 +25,7 @@ struct Player {
     string nickname;
     int guessed[8] = {0,0,0,0,0,0,0,0};
     int missed = 0;
+    int hits = 0;
 };
 
 class ServerManager {
@@ -32,6 +33,12 @@ class ServerManager {
         int port;
         void start();
         
+        vector<string> words = {
+            "samoloty", "piosenka", "kartonik", "informat", 
+            "mieszkan", "chomikuj", "teleport", "wazoniki",
+            "zabawnik", "ogrodnik", "przystan", "wyscigow", "mechanik",
+            "ogrodowa", "przyklad", "zapiekli", "dodatnie"
+        };
     private:
         int server_fd;
         vector<struct pollfd> poll_fds;

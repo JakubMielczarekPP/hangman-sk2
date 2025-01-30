@@ -38,7 +38,7 @@ void Client::receive_message() {
 
     std::string message(data, received); 
     if (message.empty()) return;
-    
+    cout << "message: " << message << endl;
     if (message.find("ROOM_LIST") == 0) {
         process_room_list(message);
         return;
@@ -47,6 +47,7 @@ void Client::receive_message() {
         return;
     } else if (message == "LEAVE_ROOM") {
         roomId = -1;
+        winners.clear();
         return;
     } else if (message == "WRONG_NICKNAME") {
         error = "Nickname must be unique, less than 18 characters, mustn't contain \";\", \":\" and \",\"!";
@@ -60,10 +61,17 @@ void Client::receive_message() {
     } else if (message.find("END_GAME") == 0) {
         string winner = message.substr(message.find(';') + 1);
         
+        cout << winner << endl;
         std::stringstream ss(winner);
         std::string line;
+        
+        vector<string> myWinners;
+        while (std::getline(ss, line, ':')) {
+            cout << line << endl;
+            myWinners.push_back(line);
+        }
 
-        while (std::getline(ss, line, ':')) winners.push_back(line);
+        winners = myWinners;
     }
 }
 

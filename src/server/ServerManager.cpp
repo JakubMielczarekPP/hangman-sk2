@@ -137,7 +137,7 @@ void ServerManager::handle_client_input(int fd, const string& input) {
         Room room;
         room.id = next_room_id;
         rooms[next_room_id] = room;
-        room.create_room();
+        room.create_room(words);
 
         cout << "Room #" << next_room_id << " created!" << endl;
         
@@ -206,6 +206,10 @@ void ServerManager::leave_room(int fd) {
         }
 
         player.room_id = -1;
+        for (int i = 0; i < 8; i++) player.guessed[i] = 0;
+        player.missed = 0;
+    } else if (room > -1) {
+        player.room_id = -1;
     }
 
 }
@@ -258,7 +262,7 @@ void ServerManager::next_turn(int room_id) {
         if (players.find(fd) == players.end()) continue;
         Player player = players[fd];
         
-        if (player.missed < 6) alive++;
+        if (player.missed < 6 && player.hits < 8) alive++;
     }
 
     if (alive < 2) return end_game(room_id);
@@ -269,7 +273,11 @@ void ServerManager::next_turn(int room_id) {
     if (players[room.players[room.turnId]].missed >= 6) {
         players[room.players[room.turnId]].missed++;
         return next_turn(room_id);
+    } else if (players[room.players[room.turnId]].hits >= 8) {
+        return next_turn(room_id);
     }
+
+    update_room_players(room_id);
 } 
 
 void ServerManager::end_game(int room_id) {
@@ -295,13 +303,16 @@ void ServerManager::end_game(int room_id) {
 
     
     for (const auto& player : roomPlayers) {
+        cout << "END GAME " << endl;
         send_to_client(player.fd, "END_GAME;"+usernames);
     }
     
+    rooms.erase(room_id);
 }
 
 void ServerManager::guess(int fd, string& character) {
     if (players.find(fd) == players.end()) return;
+    if (character.empty()) return;
 
     Player& player = players[fd];
     int room_id = player.room_id;
@@ -318,11 +329,13 @@ void ServerManager::guess(int fd, string& character) {
         if (c == character[0] && player.guessed[i] == 0) {
             player.guessed[i] = 1;
             hits++;
+            send_to_client(fd, "GUESSED;"+character);
         }
     }
 
     if (hits == 0) player.missed++;
+    else player.missed += hits;
+
 
     next_turn(room_id);
-    update_room_players(room_id);
 }

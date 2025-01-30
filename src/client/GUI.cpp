@@ -204,8 +204,6 @@ void GUI::handle_clicks(sf::Event event, Client& client) {
     if (!cmd.empty()) client.send_to_server(cmd);
 }
 
-
-
 void GUI::handle_scroll(sf::Event event) {
     if (event.mouseWheelScroll.delta > 0) {
         if (scrollOffset > 0) {
@@ -217,5 +215,17 @@ void GUI::handle_scroll(sf::Event event) {
 }
 
 void GUI::drawResults(Client& client) {
-    cout << client.winners[0] << endl;
+    title.setString("Game Results");
+    window.draw(title);
+
+    for (int i = 0; i < client.winners.size(); i++) {
+        sf::Text name;
+        name.setString((to_string(i+1)) + ". " + client.winners[i]);
+        name.setFont(font);
+        name.setPosition(20, 80+i*50);
+
+        window.draw(name);
+    }
+
+    window.draw(leaveRoomButton);
 }

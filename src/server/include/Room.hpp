@@ -3,6 +3,10 @@
 
 #include <vector>
 #include <algorithm>
+#include <cstring>
+#include <string>
+#include <ctime> 
+#include <cstdlib> 
 
 using namespace std;
 
@@ -13,7 +17,7 @@ class Room {
         vector<int> players;
         char word[9] = "abstrakt";
 
-        void create_room();
+        void create_room(vector<string>& words);
         void remove_player_by_fd(int fd);
 };
 
