@@ -26,7 +26,7 @@ int main() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) window.close();
             else if (event.type == sf::Event::TextEntered) gui.handle_input(event, client);
-            else if (event.type == sf::Event::MouseButtonPressed) gui.handle_clicks(event, client);
+            else if (event.type == sf::Event::MouseButtonPressed) gui.handle_clicks(client);
             else if (event.type == sf::Event::MouseWheelScrolled) gui.handle_scroll(event);
         }
 

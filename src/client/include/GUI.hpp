@@ -25,7 +25,7 @@ public:
     void drawLobbyScreen(Client& client);
     void drawResults(Client& client);
     void handle_input(sf::Event event, Client& client);
-    void handle_clicks(sf::Event event, Client& client);
+    void handle_clicks(Client& client);
     void handle_scroll(sf::Event event);
 
     vector<JoinButton> joinButtons;

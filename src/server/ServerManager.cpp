@@ -219,7 +219,7 @@ void ServerManager::update_room_players(int roomId) {
     if (rooms.count(roomId) == 0) return;
 
     string playersData = "";
-    for (int i = 0; i < room.players.size(); i++) {
+    for (size_t i = 0; i < room.players.size(); i++) {
         if (players.count(room.players[i]) == 0) continue;
         playersData += players[room.players[i]].nickname + ",";
         for (const auto& guess : players[room.players[i]].guessed) playersData += to_string(guess);
@@ -229,7 +229,7 @@ void ServerManager::update_room_players(int roomId) {
 
     string data = playersData;
     cout << "player data: " << data << endl;
-    for (int i = 0; i < room.players.size(); i++) {
+    for (size_t i = 0; i < room.players.size(); i++) {
         send_to_client(room.players[i], "UPDATE_ROOM;" + data + ";" + to_string(i) + ";" + to_string(room.turnId));
     }
 }
@@ -257,7 +257,7 @@ void ServerManager::next_turn(int room_id) {
     Room& room = rooms[room_id];
 
     int alive = 0;
-    for (int i = 0; i < room.players.size(); i++) {
+    for (size_t i = 0; i < room.players.size(); i++) {
         int fd = room.players[i];
         if (players.find(fd) == players.end()) continue;
         Player player = players[fd];
@@ -267,7 +267,7 @@ void ServerManager::next_turn(int room_id) {
 
     if (alive < 2) return end_game(room_id);
 
-    if (room.turnId+1 >= room.players.size()) room.turnId = 0;
+    if (static_cast<size_t>(room.turnId+1) >= room.players.size()) room.turnId = 0;
     else room.turnId++;
 
     if (players[room.players[room.turnId]].missed >= 6) {
@@ -285,7 +285,7 @@ void ServerManager::end_game(int room_id) {
     Room& room = rooms[room_id];
 
     vector<Player> roomPlayers;
-    for (int i = 0; i < room.players.size(); i++) {
+    for (size_t i = 0; i < room.players.size(); i++) {
         int fd = room.players[i];
         if (players.find(fd) == players.end()) continue;
         Player player = players[fd];

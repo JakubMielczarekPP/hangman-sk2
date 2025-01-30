@@ -45,7 +45,7 @@ void GUI::drawGameScreen(Client& client) {
     }
 
     for (int i = 0; i < 4; i++) {
-        if (client.roomData.players.size() <= i) break;
+        if (client.roomData.players.size() <= static_cast<size_t>(i)) break;
 
         sf::Texture texture;
         sf::Sprite sprite;
@@ -130,11 +130,11 @@ void GUI::drawLobbyScreen(Client& client) {
     const int roomHeight = 50;
     const int maxRoomsVisible = window.getSize().y / roomHeight; 
 
-    if (client.rooms.size() > maxRoomsVisible) {
+    if (client.rooms.size() > static_cast<size_t>(maxRoomsVisible)) {
         scrollOffset = std::max(0, scrollOffset); 
     }
 
-    for (int i = scrollOffset; i < client.rooms.size(); i++) {
+    for (int i = scrollOffset; static_cast<size_t>(i) < client.rooms.size(); i++) {
         sf::Text roomText;
         roomText.setFont(font);
         roomText.setString("Room #" + std::to_string(client.rooms[i].roomId));
@@ -187,7 +187,7 @@ void GUI::handle_input(sf::Event event, Client& client) {
     updateInputText();
 }
 
-void GUI::handle_clicks(sf::Event event, Client& client) {
+void GUI::handle_clicks(Client& client) {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     string cmd = "";
 
@@ -196,7 +196,7 @@ void GUI::handle_clicks(sf::Event event, Client& client) {
     else if (client.roomId > -1 && leaveRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "LEAVE_ROOM";    
     else if (client.roomId > -1 && startRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "START_ROOM";    
     else if (client.roomId < 0) {
-        for (int i = 0; i < joinButtons.size(); i++) {
+        for (size_t i = 0; i < joinButtons.size(); i++) {
             if (joinButtons[i].button.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "JOIN_ROOM;" + to_string(joinButtons[i].id);
         }
     }
@@ -218,7 +218,7 @@ void GUI::drawResults(Client& client) {
     title.setString("Game Results");
     window.draw(title);
 
-    for (int i = 0; i < client.winners.size(); i++) {
+    for (size_t i = 0; i < client.winners.size(); i++) {
         sf::Text name;
         name.setString((to_string(i+1)) + ". " + client.winners[i]);
         name.setFont(font);
