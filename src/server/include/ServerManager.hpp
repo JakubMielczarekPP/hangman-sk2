@@ -49,6 +49,9 @@ class ServerManager {
         void leave_room(int fd);
         void update_room_players(int room);
         void start_game(int fd);
+        void guess(int fd, string& character);
+        void next_turn(int room_id);
+        void end_game(int room_id);
 };
 
 #endif

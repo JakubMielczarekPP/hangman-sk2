@@ -23,6 +23,7 @@ struct PlayerData {
 struct RoomData {
     int roomId;
     int turnId;
+    int playerPosition = -2;
     bool ownsRoom = false;
     vector<PlayerData> players;
 };
@@ -32,6 +33,8 @@ public:
     bool connected;
     string nickname = "";
     string error = "";
+
+    vector<string> winners;
 
     int roomId = -1;
 

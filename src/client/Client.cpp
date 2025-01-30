@@ -57,6 +57,13 @@ void Client::receive_message() {
     } else if (message.find("UPDATE_ROOM") == 0) {
         string roomData = message.substr(message.find(';') + 1);
         process_room_data(roomData);
+    } else if (message.find("END_GAME") == 0) {
+        string winner = message.substr(message.find(';') + 1);
+        
+        std::stringstream ss(winner);
+        std::string line;
+
+        while (std::getline(ss, line, ':')) winners.push_back(line);
     }
 }
 
@@ -65,7 +72,7 @@ void Client::process_room_data(string& data) {
     std::stringstream ss(data);
     std::string line;
     
-    int k = 0;
+    int k = 0, turnId = -1, playerPosition = -2;
     bool isOwner = false;
     while (std::getline(ss, line, ';')) {
         std::stringstream ss3(line);
@@ -88,22 +95,24 @@ void Client::process_room_data(string& data) {
                     } else {
                         missed = stoi(element);
                     }
-
                     index++;
                 }
 
                 players.push_back({nickname, {}, missed});
                 std::copy(std::begin(guessed), std::end(guessed), std::begin(players.back().guessed));
             }
-        } else {
+        } else if (k==1) {
             if (line == "0") isOwner = true;
+            playerPosition = stoi(line);
+        } else {
+            turnId = stoi(line);
         }
 
         k++;
 
     }
 
-    roomData = {roomId, -1, isOwner, players};
+    roomData = {roomId, turnId, playerPosition, isOwner, players};
 }
 
 void Client::process_room_list(string& message) {

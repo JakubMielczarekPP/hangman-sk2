@@ -47,6 +47,19 @@ void GUI::drawGameScreen(Client& client) {
     for (int i = 0; i < 4; i++) {
         if (client.roomData.players.size() <= i) break;
 
+        sf::Texture texture;
+        sf::Sprite sprite;
+        std::string filename = "assets/" + std::to_string(min(client.roomData.players[i].missed,6)) + ".png";
+        if (!texture.loadFromFile(filename)) {
+            std::cerr << "Nie można załadować pliku: " << filename << std::endl;
+            return ;
+        }
+
+        sprite.setScale(0.5f, 0.5f);
+        sprite.setTexture(texture);
+        sprite.setPosition((i%2 == 0 ? (window.getSize().x/4)-100: (window.getSize().x)-(window.getSize().x/4)-100), i<2 ? (window.getSize().y/2)-350 : (window.getSize().y)-350);
+        window.draw(sprite);
+
         sf::Text nickname;
         nickname.setFont(font);
         nickname.setString(client.roomData.players[i].nickname + ((client.nickname == client.roomData.players[i].nickname) ? " (YOU)" : ""));
@@ -67,6 +80,15 @@ void GUI::drawGameScreen(Client& client) {
 
             j++;
         }
+    }
+
+    if (client.roomData.turnId == client.roomData.playerPosition) {
+        sf::Text turn;
+        turn.setString("YOUR TURN");
+        turn.setFont(font);
+        turn.setPosition(300, 50);
+
+        window.draw(turn);
     }
 
     window.draw(leaveRoomButton);
@@ -140,19 +162,26 @@ void GUI::updateInputText() {
 }
 
 void GUI::handle_input(sf::Event event, Client& client) {
-    if (event.text.unicode == '\r') {
-        if (!client.connected) {
-            if (!client.connect_to_server(inputBuffer, 8080)) client.error = "Unknown IP";
-        } else if (client.nickname.empty()) {
-            string cmd = "SET_NICKNAME;" + inputBuffer; 
+    if (client.roomId < 0) {
+        if (event.text.unicode == '\r') {
+            if (!client.connected) {
+                if (!client.connect_to_server(inputBuffer, 8080)) client.error = "Unknown IP";
+            } else if (client.nickname.empty()) {
+                string cmd = "SET_NICKNAME;" + inputBuffer; 
+                client.send_to_server(cmd);
+            }
+
+            inputBuffer.clear();
+        } else if (event.text.unicode == '\b') {  // Backspace
+            if (!inputBuffer.empty()) inputBuffer.pop_back();
+        } else {
+            inputBuffer += static_cast<char>(event.text.unicode);
+        }
+    } else if (client.roomData.turnId == client.roomData.playerPosition) {
+        if ((event.text.unicode >= 'A' && event.text.unicode <= 'Z') ||  (event.text.unicode >= 'a' && event.text.unicode <= 'z')) {
+            string cmd = "GUESS;" + std::string(1, static_cast<char>(event.text.unicode));
             client.send_to_server(cmd);
         }
-
-        inputBuffer.clear();
-    } else if (event.text.unicode == '\b') {  // Backspace
-        if (!inputBuffer.empty()) inputBuffer.pop_back();
-    } else {
-        inputBuffer += static_cast<char>(event.text.unicode);
     }
 
     updateInputText();
@@ -165,6 +194,7 @@ void GUI::handle_clicks(sf::Event event, Client& client) {
     if (client.roomId < 0 && createRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "CREATE_ROOM";
     else if (client.roomId < 0 && refreshButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "ROOM_LIST";    
     else if (client.roomId > -1 && leaveRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "LEAVE_ROOM";    
+    else if (client.roomId > -1 && startRoomButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "START_ROOM";    
     else if (client.roomId < 0) {
         for (int i = 0; i < joinButtons.size(); i++) {
             if (joinButtons[i].button.getGlobalBounds().contains(mousePos.x, mousePos.y)) cmd = "JOIN_ROOM;" + to_string(joinButtons[i].id);
@@ -184,4 +214,8 @@ void GUI::handle_scroll(sf::Event event) {
     } else if (event.mouseWheelScroll.delta < 0) {
         scrollOffset++;
     }
+}
+
+void GUI::drawResults(Client& client) {
+    cout << client.winners[0] << endl;
 }

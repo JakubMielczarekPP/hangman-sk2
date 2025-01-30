@@ -32,6 +32,7 @@ int main() {
 
         if (!client.connected || client.nickname.empty()) gui.drawIntroScreen(client);
         else if(client.roomId > 0) gui.drawGameScreen(client);
+        else if(client.winners.size()) gui.drawResults(client);
         else gui.drawLobbyScreen(client);
 
         window.display();

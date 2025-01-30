@@ -162,8 +162,11 @@ void ServerManager::handle_client_input(int fd, const string& input) {
         leave_room(fd);
         send_to_client(fd, "LEAVE_ROOM");
         handle_client_input(fd, "ROOM_LIST");
-    } else if (input  == "START_GAME") {
-        
+    } else if (input  == "START_ROOM") {
+        start_game(fd);
+    } else if (input.rfind("GUESS", 0) == 0) {
+        string character = input.substr(input.find(';') + 1);
+        guess(fd, character);
     }
 }
 
@@ -223,6 +226,103 @@ void ServerManager::update_room_players(int roomId) {
     string data = playersData;
     cout << "player data: " << data << endl;
     for (int i = 0; i < room.players.size(); i++) {
-        send_to_client(room.players[i], "UPDATE_ROOM;" + data + ";" + to_string(i));
+        send_to_client(room.players[i], "UPDATE_ROOM;" + data + ";" + to_string(i) + ";" + to_string(room.turnId));
     }
+}
+
+void ServerManager::start_game(int fd) {
+    if (players.find(fd) == players.end()) return;
+
+    Player player = players[fd];
+    int room_id = player.room_id;
+    if (rooms.find(room_id) == rooms.end()) return;
+
+    Room& room = rooms[room_id];
+    if (room.players[0] != fd) return; // nie owner
+    if (room.turnId > -1) return; //juz zaczete
+    if (room.players.size() < 2) return; //mniej niz 2 graczy
+
+
+    room.turnId = 0;
+
+    update_room_players(room_id);
+}
+
+void ServerManager::next_turn(int room_id) {
+    if (rooms.find(room_id) == rooms.end()) return;
+    Room& room = rooms[room_id];
+
+    int alive = 0;
+    for (int i = 0; i < room.players.size(); i++) {
+        int fd = room.players[i];
+        if (players.find(fd) == players.end()) continue;
+        Player player = players[fd];
+        
+        if (player.missed < 6) alive++;
+    }
+
+    if (alive < 2) return end_game(room_id);
+
+    if (room.turnId+1 >= room.players.size()) room.turnId = 0;
+    else room.turnId++;
+
+    if (players[room.players[room.turnId]].missed >= 6) {
+        players[room.players[room.turnId]].missed++;
+        return next_turn(room_id);
+    }
+} 
+
+void ServerManager::end_game(int room_id) {
+    if (rooms.find(room_id) == rooms.end()) return;
+    Room& room = rooms[room_id];
+
+    vector<Player> roomPlayers;
+    for (int i = 0; i < room.players.size(); i++) {
+        int fd = room.players[i];
+        if (players.find(fd) == players.end()) continue;
+        Player player = players[fd];
+        roomPlayers.push_back(player);
+    }
+
+    std::sort(roomPlayers.begin(), roomPlayers.end(), [](const Player& a, const Player& b) {
+        return a.missed < b.missed;
+    });
+   
+    string usernames = "";
+    for (int i =0 ; i< 3; i++) {
+        usernames += roomPlayers[i].nickname + ":";
+    }
+
+    
+    for (const auto& player : roomPlayers) {
+        send_to_client(player.fd, "END_GAME;"+usernames);
+    }
+    
+}
+
+void ServerManager::guess(int fd, string& character) {
+    if (players.find(fd) == players.end()) return;
+
+    Player& player = players[fd];
+    int room_id = player.room_id;
+    if (rooms.find(room_id) == rooms.end()) return;
+    Room& room = rooms[room_id];
+
+    if (room.players[room.turnId] != fd) return; //nie twoja tura
+
+    cout << player.nickname << " guessed " << character << endl;
+
+    int hits = 0;
+    for (int i = 0; i < 8; i++) {
+        char c = room.word[i];
+        if (c == character[0] && player.guessed[i] == 0) {
+            player.guessed[i] = 1;
+            hits++;
+        }
+    }
+
+    if (hits == 0) player.missed++;
+
+    next_turn(room_id);
+    update_room_players(room_id);
 }
