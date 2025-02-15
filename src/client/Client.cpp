@@ -38,7 +38,6 @@ void Client::receive_message() {
 
     std::string message(data, received); 
     if (message.empty()) return;
-    cout << "message: " << message << endl;
     if (message.find("ROOM_LIST") == 0) {
         process_room_list(message);
         return;
@@ -62,14 +61,11 @@ void Client::receive_message() {
         process_room_data(roomData);
     } else if (message.find("END_GAME") == 0) {
         string winner = message.substr(message.find(';') + 1);
-        
-        cout << winner << endl;
         std::stringstream ss(winner);
         std::string line;
-        
         vector<string> myWinners;
+
         while (std::getline(ss, line, ':')) {
-            cout << line << endl;
             myWinners.push_back(line);
         }
 
@@ -96,7 +92,6 @@ void Client::process_room_data(string& data) {
     while (std::getline(ss, line, ';')) {
         std::stringstream ss3(line);
         std::string user;
-        cout << line << endl;
         if (k == 0) {
             while (std::getline(ss3, user, ':')) {
                 std::stringstream ss2(user);
@@ -137,7 +132,6 @@ void Client::process_room_data(string& data) {
 void Client::process_room_list(string& message) {
     rooms.clear();
 
-    std::cout<<message<<std::endl;
     std::stringstream ss(message);
     std::string token;
 
@@ -155,10 +149,5 @@ void Client::process_room_list(string& message) {
         room.playersCount = std::stoi(playersCountStr); 
 
         rooms.push_back(room);
-    }
-
-    std::cout << "Rooms:" << std::endl;
-    for (const Room& room : rooms) {
-        std::cout << "Room ID: " << room.roomId << ", Players: " << room.playersCount << std::endl;
     }
 }

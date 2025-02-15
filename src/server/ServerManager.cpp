@@ -289,6 +289,13 @@ void ServerManager::end_game(int room_id) {
         int fd = room.players[i];
         if (players.find(fd) == players.end()) continue;
         Player player = players[fd];
+        
+        players[fd].missed = 0;
+        players[fd].hits = 0;
+        for (int i = 0; i < 8; i++) {
+            players[fd].guessed[i] = 0;
+        }
+
         roomPlayers.push_back(player);
     }
 
