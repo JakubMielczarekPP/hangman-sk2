@@ -8,6 +8,8 @@ void Room::create_room(vector<string>& words) {
 
     std::strncpy(word, chosenWord.c_str(), 8);
     word[8] = '\0';
+
+    std::cout << "Chosen word: " << word << std::endl;
 }
 
 void Room::remove_player_by_fd(int fd) {

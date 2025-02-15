@@ -136,11 +136,11 @@ void ServerManager::handle_client_input(int fd, const string& input) {
         if (players[fd].room_id > -1) return;
         Room room;
         room.id = next_room_id;
-        rooms[next_room_id] = room;
         room.create_room(words);
+        rooms[next_room_id] = room;
 
         cout << "Room #" << next_room_id << " created!" << endl;
-        
+
         join_to_room(fd, next_room_id);
         send_to_client(fd, "JOIN_ROOM;" + to_string(next_room_id));
         
@@ -319,23 +319,25 @@ void ServerManager::guess(int fd, string& character) {
     if (rooms.find(room_id) == rooms.end()) return;
     Room& room = rooms[room_id];
 
-    if (room.players[room.turnId] != fd) return; //nie twoja tura
+    if (room.players[room.turnId] != fd) return; // not your turn
 
-    cout << player.nickname << " guessed " << character << endl;
+    std::cout << player.nickname << " guessed " << character << std::endl;
+    std::cout << "Should be: " << room.word << std::endl;
 
     int hits = 0;
     for (int i = 0; i < 8; i++) {
         char c = room.word[i];
         if (c == character[0] && player.guessed[i] == 0) {
             player.guessed[i] = 1;
+
             hits++;
-            send_to_client(fd, "GUESSED;"+character);
+            send_to_client(fd, "GUESSED;" + character + ";" + to_string(i));
         }
     }
 
+    cout << "Hits: " << hits << endl;
     if (hits == 0) player.missed++;
-    else player.missed += hits;
-
+    else player.hits += hits;
 
     next_turn(room_id);
 }

@@ -44,6 +44,8 @@ void Client::receive_message() {
         return;
     } else if (message.find("JOIN_ROOM") == 0) {
         roomId = std::stoi(message.substr(message.find(';') + 1));
+        roomData = {roomId, -1, -2, false, {}};
+        std::fill(std::begin(userGuessed), std::end(userGuessed), '\0');
         return;
     } else if (message == "LEAVE_ROOM") {
         roomId = -1;
@@ -72,6 +74,15 @@ void Client::receive_message() {
         }
 
         winners = myWinners;
+    } else if (message.find("GUESSED") == 0) {
+        std::stringstream ss(message.substr(message.find(';') + 1));
+        std::string character, indexStr;
+        std::getline(ss, character, ';');
+        std::getline(ss, indexStr, ';');
+        int index = std::stoi(indexStr);
+
+        userGuessed[index] = character[0];
+        cout << "Guessed character: " << character << " at index: " << index << endl;
     }
 }
 

@@ -35,6 +35,7 @@ public:
     string error = "";
 
     vector<string> winners;
+    char userGuessed[8];
 
     int roomId = -1;
 

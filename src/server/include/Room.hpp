@@ -7,6 +7,7 @@
 #include <string>
 #include <ctime> 
 #include <cstdlib> 
+#include <iostream>
 
 using namespace std;
 
@@ -15,7 +16,7 @@ class Room {
         int id;
         int turnId = -1;
         vector<int> players;
-        char word[9] = "abstrakt";
+        char word[9];
 
         void create_room(vector<string>& words);
         void remove_player_by_fd(int fd);

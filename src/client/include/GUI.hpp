@@ -55,6 +55,7 @@ private:
     sf::Text startRoomText;
 
     void updateInputText();
+    sf::RectangleShape createButton(const sf::Vector2f& size, const sf::Vector2f& position, const sf::Color& color, const std::string& text, sf::Text& textElement);
 };
 
 #endif
